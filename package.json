@@ -21,6 +21,7 @@
     "@vitejs/plugin-react": "latest",
     "typescript": "latest",
     "vite": "latest",
-    "wrangler": "latest"
+    "wrangler": "latest",
+    "@types/node": "latest"
   }
 }
