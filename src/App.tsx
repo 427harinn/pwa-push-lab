@@ -21,16 +21,19 @@ export function App() {
   return (
     <main className="container">
       <p className="eyebrow">PWA Push Lab</p>
-      <h1>予約Push通知を最小構成で試す</h1>
+
+      <h1>PWAの基本構成を確認する</h1>
+
       <p>
-        React と Cloudflare Workers で、iPhone対応PWAの予約Web Push通知を
-        一段ずつ実装する検証用アプリです。
+        React と Cloudflare Workers で構成したPWAです。アプリからWorker APIへの
+        接続状態を確認できます。
       </p>
 
       <section className="status">
         <strong>Worker API</strong>
         <span>{apiStatus}</span>
       </section>
+
     </main>
   );
 }
