@@ -7,6 +7,13 @@ type HealthResponse = {
 
 export function App() {
   const [apiStatus, setApiStatus] = useState("確認中...");
+  const [notificationStatus, setNotificationStatus] = useState<
+    NotificationPermission | "unsupported"
+  >(() =>
+    typeof Notification === "undefined"
+      ? "unsupported"
+      : Notification.permission
+  );
 
   useEffect(() => {
     fetch("/api/health")
@@ -17,6 +24,20 @@ export function App() {
       .then((data) => setApiStatus(data.ok ? "接続できています" : "接続できません"))
       .catch(() => setApiStatus("接続できません"));
   }, []);
+
+  async function requestNotificationPermission() {
+    if (typeof Notification === "undefined") {
+      setNotificationStatus("unsupported");
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationStatus(permission);
+    } catch {
+      setNotificationStatus(Notification.permission);
+    }
+  }
 
   return (
     <main className="container">
@@ -34,6 +55,17 @@ export function App() {
         <span>{apiStatus}</span>
       </section>
 
+      <section className="status">
+        <strong>通知権限</strong>
+        <span>{notificationStatus}</span>
+      </section>
+
+      <button
+        onClick={requestNotificationPermission}
+        disabled={notificationStatus === "unsupported"}
+      >
+        通知を有効にする
+      </button>
     </main>
   );
 }
