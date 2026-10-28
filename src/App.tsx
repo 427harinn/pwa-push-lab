@@ -70,6 +70,19 @@ export function App() {
     console.log("Subscription sent to Worker");
   }
 
+  async function sendTestPush() {
+    const response = await fetch("/api/test-push", {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to send test push");
+    }
+
+    const result = await response.json();
+    console.log("Test push result:", result);
+  }
+
   return (
     <main className="container">
       <p className="eyebrow">PWA Push Lab</p>
@@ -103,6 +116,10 @@ export function App() {
         disabled={notificationStatus !== "granted"}
       >
         Push通知を登録する
+      </button>
+
+      <button onClick={sendTestPush}>
+        テスト通知を送る
       </button>
     </main>
   );
