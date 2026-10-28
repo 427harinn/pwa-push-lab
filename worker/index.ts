@@ -1,4 +1,4 @@
-import type { D1Database } from "@cloudflare/workers-types";
+import type { D1Database, ScheduledController } from "@cloudflare/workers-types";
 import { sendPushNotification } from "@mmmike/web-push/send";
 
 interface Env {
@@ -117,6 +117,103 @@ export default {
       });
     }
 
+    if (url.pathname === "/api/scheduled-notifications" && 
+      request.method === "POST") {
+      const notification = (await request.json()) as {
+        title: string;
+        body: string;
+        scheduledAt: string;
+      };
+
+      const result = await env.DB.prepare(`
+        INSERT INTO scheduled_notifications (
+          title,
+          body,
+          scheduled_at
+        )
+        VALUES (?, ?, ?)
+      `)
+        .bind(
+          notification.title,
+          notification.body,
+          notification.scheduledAt
+        )
+        .run();
+
+      return Response.json({
+        ok: true,
+        id: result.meta.last_row_id,
+      });
+    }
     return new Response("Not found", { status: 404 });
   },
+
+ async scheduled(
+    _controller: ScheduledController,
+    env: Env
+  ): Promise<void> {
+    const now = new Date().toISOString();
+
+    const notifications = await env.DB.prepare(`
+      SELECT id, title, body
+      FROM scheduled_notifications
+      WHERE scheduled_at <= ?
+        AND sent_at IS NULL
+      ORDER BY scheduled_at ASC
+    `)
+      .bind(now)
+      .all<{
+        id: number;
+        title: string;
+        body: string;
+      }>();
+
+    const subscription = await env.DB.prepare(`
+      SELECT endpoint, p256dh, auth
+      FROM push_subscriptions
+      ORDER BY id DESC
+      LIMIT 1
+    `).first<{
+      endpoint: string;
+      p256dh: string;
+      auth: string;
+    }>();
+
+    if (!subscription) {
+      console.log("No push subscription found");
+      return;
+    }
+
+    for (const notification of notifications.results) {
+      const delivered = await sendPushNotification(
+        {
+          endpoint: subscription.endpoint,
+          keys: {
+            p256dh: subscription.p256dh,
+            auth: subscription.auth,
+          },
+        },
+        {
+          title: notification.title,
+          body: notification.body,
+          url: "/",
+        },
+        {
+          publicKey: env.VAPID_PUBLIC_KEY,
+          privateKey: env.VAPID_PRIVATE_KEY,
+          subject: env.VAPID_SUBJECT,
+        }
+      );
+
+      if (delivered) {
+        await env.DB.prepare(`
+          UPDATE scheduled_notifications
+          SET sent_at = ?
+          WHERE id = ?
+        `)
+          .bind(now, notification.id)
+          .run();
+      }
+    }
+  }
 };

@@ -12,5 +12,8 @@
 			"database_name": "pwa-push-lab",
 			"database_id": "c96f6413-de1b-4d6d-ae74-37fad94edf17"
 		}
-	]
+	],
+	"triggers": {
+		"crons": ["* * * * *"]
+	}
 }

@@ -2,12 +2,17 @@ import { useEffect, useState } from "react";
 
 const VAPID_PUBLIC_KEY = "BG7aFLQ6Nsdg7rEq4ea9IadQl2Cy8C8wYQTBZzTBuvfkEimntsV_MWzuYB1BQIyfIWJ6UZHvL44xZ2krPEjhRIs";
 
+
 type HealthResponse = {
   ok: boolean;
   service: string;
 };
 
 export function App() {
+  const [title, setTitle] = useState("PWA Push Lab");
+  const [body, setBody] = useState("予約通知です");
+  const [scheduledAt, setScheduledAt] = useState("");
+
   const [apiStatus, setApiStatus] = useState("確認中...");
   const [notificationStatus, setNotificationStatus] = useState<
     NotificationPermission | "unsupported"
@@ -83,6 +88,29 @@ export function App() {
     console.log("Test push result:", result);
   }
 
+  async function scheduleNotification() {
+  if (!scheduledAt) return;
+
+  const response = await fetch("/api/scheduled-notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title,
+        body,
+        scheduledAt: new Date(scheduledAt).toISOString(),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to schedule notification");
+    }
+
+    const result = await response.json();
+    console.log("Scheduled notification:", result);
+  }
+
   return (
     <main className="container">
       <p className="eyebrow">PWA Push Lab</p>
@@ -121,6 +149,32 @@ export function App() {
       <button onClick={sendTestPush}>
         テスト通知を送る
       </button>
+
+      <div>
+      <input
+        type="text"
+        value={title}
+        onChange={(event) => setTitle(event.target.value)}
+        placeholder="タイトル"
+      />
+
+      <input
+        type="text"
+        value={body}
+        onChange={(event) => setBody(event.target.value)}
+        placeholder="本文"
+      />
+
+      <input
+        type="datetime-local"
+        value={scheduledAt}
+        onChange={(event) => setScheduledAt(event.target.value)}
+      />
+
+      <button onClick={scheduleNotification}>
+        通知を予約する
+      </button>
+    </div>
     </main>
   );
 }
