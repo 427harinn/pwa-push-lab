@@ -11,17 +11,19 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
+    "@mmmike/web-push": "^1.5.0",
     "react": "latest",
     "react-dom": "latest"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "latest",
+    "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
+    "tsx": "^4.23.15",
     "typescript": "latest",
     "vite": "latest",
-    "wrangler": "latest",
-    "@types/node": "latest"
+    "wrangler": "latest"
   }
 }
