@@ -54,7 +54,20 @@ export function App() {
     });
 
     console.log("PushSubscription:", subscription);
-    console.log("PushSubscription JSON:", subscription.toJSON());
+
+    const response = await fetch("/api/subscriptions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(subscription),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to register push subscription");
+    }
+
+    console.log("Subscription sent to Worker");
   }
 
   return (
